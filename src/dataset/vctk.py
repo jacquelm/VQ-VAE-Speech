@@ -1,4 +1,4 @@
-#from https://github.com/pytorch/audio/blob/master/torchaudio/datasets/vctk.py
+# from https://github.com/pytorch/audio/blob/master/torchaudio/datasets/vctk.py
 
 import os
 from torch.utils.data import Dataset
@@ -7,10 +7,22 @@ import shutil
 import random
 
 import pathlib
+
 AUDIO_EXTENSIONS = [
-    '.wav', '.mp3', '.flac', '.sph', '.ogg', '.opus',
-    '.WAV', '.MP3', '.FLAC', '.SPH', '.OGG', '.OPUS',
+    ".wav",
+    ".mp3",
+    ".flac",
+    ".sph",
+    ".ogg",
+    ".opus",
+    ".WAV",
+    ".MP3",
+    ".FLAC",
+    ".SPH",
+    ".OGG",
+    ".OPUS",
 ]
+
 
 def is_audio_file(filename):
     return any(filename.endswith(extension) for extension in AUDIO_EXTENSIONS)
@@ -32,6 +44,7 @@ def make_manifest(dir):
                     audios.append(item)
     return audios
 
+
 def load_txts(dir):
     """Create a dictionary with all the text of the audio transcriptions."""
     utterences = dict()
@@ -46,29 +59,39 @@ def load_txts(dir):
             for fname in fnames:
                 if fname.endswith(".txt"):
                     with open(os.path.join(root, fname), "r") as f:
-                        fname_no_ext = os.path.basename(
-                            fname).rsplit(".", 1)[0]
+                        fname_no_ext = os.path.basename(fname).rsplit(".", 1)[0]
                         utterences[fname_no_ext] = f.readline()
     return utterences
 
+
 class VCTK(Dataset):
-    url = 'http://homepages.inf.ed.ac.uk/jyamagis/release/VCTK-Corpus.tar.gz'
-    dset_path = 'VCTK-Corpus'
+    url = "http://www.udialogue.org/download/VCTK-Corpus.tar.gz"
+    dset_path = "VCTK-Corpus"
 
     def make_speaker_dic(self, root):
         speakers = [
-            str(speaker.name) for speaker in pathlib.Path(root).glob('wav48/*/')]
+            str(speaker.name) for speaker in pathlib.Path(root).glob("wav48/*/")
+        ]
         speakers = sorted([speaker for speaker in speakers])
         speaker_dic = {speaker: i for i, speaker in enumerate(speakers)}
         return speaker_dic
 
-    def __init__(self, root, downsample=True, transform=None, target_transform=None, download=True, dev_mode=False, ratio=0.8):
+    def __init__(
+        self,
+        root,
+        downsample=True,
+        transform=None,
+        target_transform=None,
+        download=True,
+        dev_mode=False,
+        ratio=0.8,
+    ):
         super(VCTK, self).__init__()
 
         self.root = os.path.expanduser(root)
-        self.raw_folder = '../data/vctk/raw'
-        if os.path.isdir('..' + os.sep + self.raw_folder):
-            self.raw_folder = '..' + os.sep + self.raw_folder
+        self.raw_folder = "../data/vctk/raw"
+        if os.path.isdir(".." + os.sep + self.raw_folder):
+            self.raw_folder = ".." + os.sep + self.raw_folder
         self.downsample = downsample
         self.transform = transform
         self.target_transform = target_transform
@@ -83,20 +106,19 @@ class VCTK(Dataset):
         if download:
             self.download()
 
-        dset_abs_path = os.path.join(
-            self.root, self.raw_folder, self.dset_path)
+        dset_abs_path = os.path.join(self.root, self.raw_folder, self.dset_path)
 
         self.audios = make_manifest(dset_abs_path)
         self.utterences = load_txts(dset_abs_path)
         self.speaker_dic = self.make_speaker_dic(dset_abs_path)
 
         random.shuffle(self.audios)
-        split = int(len(self.audios)*ratio)
+        split = int(len(self.audios) * ratio)
 
         self.audios_train = self.audios[:split]
         self.audios_val = self.audios[split:]
 
-    def _check_exists(self,dset_abs_path):
+    def _check_exists(self, dset_abs_path):
         return os.path.exists(os.path.join(dset_abs_path, "speaker-info.txt"))
 
     def download(self):
@@ -105,11 +127,10 @@ class VCTK(Dataset):
 
         raw_abs_dir = os.path.join(self.root, self.raw_folder)
         # processed_abs_dir = os.path.join(self.root, self.processed_folder)
-        dset_abs_path = os.path.join(
-            self.root, self.raw_folder, self.dset_path)
+        dset_abs_path = os.path.join(self.root, self.raw_folder, self.dset_path)
 
         if self._check_exists(dset_abs_path):
-            print('Files already downloaded!')
+            print("Files already downloaded!")
             return
 
         # download files
@@ -122,8 +143,8 @@ class VCTK(Dataset):
                 raise
 
         url = self.url
-        print('Downloading ' + url)
-        filename = url.rpartition('/')[2]
+        print("Downloading " + url)
+        filename = url.rpartition("/")[2]
         file_path = os.path.join(self.root, self.raw_folder, filename)
         if not os.path.isfile(file_path):
             urllib.request.urlretrieve(url, file_path)
@@ -136,6 +157,7 @@ class VCTK(Dataset):
             os.unlink(file_path)
 
         shutil.copyfile(
+            file_path,
             os.path.join(dset_abs_path, "COPYING"),
         )
-        print('Done!')
+        print("Done!")
